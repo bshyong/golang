@@ -1,9 +1,34 @@
 package main
 
-import "net/http"
+import (
+	"log"
+	"net/http"
+)
+
+// middleware
+func middlewareOne(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		log.Println("executing mid one")
+		next.ServeHTTP(w, r)
+	})
+}
+
+func middlewareTwo(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		log.Println("mid two")
+		next.ServeHTTP(w, r)
+	})
+}
+
+func final(w http.ResponseWriter, r *http.Request) {
+	log.Println("final handler")
+	w.Write([]byte("ok"))
+}
 
 func main() {
-	http.HandleFunc("/", hello)
+	finalHander := http.HandlerFunc(final)
+
+	http.Handle("/", middlewareOne(middlewareTwo(finalHander)))
 	http.ListenAndServe(":8080", nil)
 }
 
